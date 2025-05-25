@@ -1,0 +1,43 @@
+.prfl-card {
+  background-image: url('https://assets.ccbp.in/frontend/react-js/profile-bg.png');
+  background-size: cover;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #121212;
+}
+.prfl-container {
+  width: 25vw;
+  background-color: #000000;
+  padding: 10px;
+  color: white;
+}
+.prfl-img {
+  width: 50px;
+  align-self: center;
+  margin: 6px;
+}
+.prfl-name {
+  font-size: 26px;
+  margin: 6px;
+}
+.prfl-description {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 6px;
+  text-align: center;
+}
+.type-of-employment-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.type-of-employment {
+  list-style: none;
+}
+.type-of-employment-text {
+  margin: 6px;
+  font-size: 24px;
+}

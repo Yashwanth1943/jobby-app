@@ -1,0 +1,68 @@
+.job-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: #000000;
+  height: max-content;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  min-height: 100vh; /* Ensure full height */
+  display: flex;
+  flex-direction: row;
+  background-color: black;
+  width: 100%;
+}
+
+.jobs-container {
+  padding: 20px;
+  width: 100%;
+}
+
+.jobs-list {
+  list-style: none;
+  padding: 0;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+}
+
+.search-input {
+  background-color: black;
+  border: 1px solid white;
+  padding: 8px;
+  border-radius: 4px;
+  color: #ffffff;
+  width: 20%;
+  min-width: 200px; /* Prevents extreme shrinking */
+}
+
+.search-button {
+  cursor: pointer;
+  background-color: black;
+  border: 1px solid white;
+  padding: 7px 12px;
+  border-radius: 4px;
+  color: #ffffff;
+  transition: background-color 0.3s ease;
+}
+
+.search-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.loader-container {
+  align-self: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* Reduced opacity */
+}

@@ -1,0 +1,268 @@
+import './index.css'
+import {Component} from 'react'
+import Cookies from 'js-cookie'
+import {BsSearch} from 'react-icons/bs' // Import BsSearch
+import Loader from 'react-loader-spinner'
+import Profile from '../Profile'
+import JobsList from '../JobsList'
+import NoJobs from '../NoJobs'
+import Header from '../Header'
+
+const employmentTypesList = [
+  {
+    employeeLabel: 'Full Time',
+    employmentTypeId: 'FULLTIME',
+  },
+  {
+    employeeLabel: 'Part Time',
+    employmentTypeId: 'PARTTIME',
+  },
+  {
+    employeeLabel: 'Freelance',
+    employmentTypeId: 'FREELANCE',
+  },
+  {
+    employeeLabel: 'Internship',
+    employmentTypeId: 'INTERNSHIP',
+  },
+]
+
+const salaryRangesList = [
+  {
+    salaryRangeId: '1000000',
+    label: '10 LPA and above',
+  },
+  {
+    salaryRangeId: '2000000',
+    label: '20 LPA and above',
+  },
+  {
+    salaryRangeId: '3000000',
+    label: '30 LPA and above',
+  },
+  {
+    salaryRangeId: '4000000',
+    label: '40 LPA and above',
+  },
+]
+
+class Jobs extends Component {
+  state = {
+    isProfileLoading: true,
+    isJobsLoading: true,
+    isFailure: false,
+    isProfileFailure: false,
+    profileDetails: {},
+    jobDetails: [],
+    searchInput: '', // Initialize searchInput state
+    activeSalaryRangeId: '',
+    activeEmploymentTypes: [],
+  }
+
+  componentDidMount() {
+    this.getProfileDetails()
+    this.getJobDetails()
+  }
+
+  setActiveSalaryRange = salaryRangeId => {
+    this.setState({activeSalaryRangeId: salaryRangeId}, this.getJobDetails)
+  }
+
+  setType = employmentTypeId => {
+    this.setState(prevState => {
+      const {activeEmploymentTypes} = prevState
+      const updatedEmploymentTypes = activeEmploymentTypes.includes(
+        employmentTypeId,
+      )
+        ? activeEmploymentTypes.filter(type => type !== employmentTypeId)
+        : [...activeEmploymentTypes, employmentTypeId]
+
+      return {activeEmploymentTypes: updatedEmploymentTypes}
+    }, this.getJobDetails)
+  }
+
+  onChangeSearchInput = event => {
+    this.setState({searchInput: event.target.value})
+  }
+
+  onSearch = () => {
+    this.getJobDetails()
+  }
+
+  getProfileDetails = async () => {
+    this.setState({isProfileLoading: true, isProfileFailure: false})
+
+    const apiUrl = `https://apis.ccbp.in/profile`
+    const jwtToken = Cookies.get('jwt_token')
+    const options = {
+      headers: {Authorization: `Bearer ${jwtToken}`},
+      method: 'GET',
+    }
+
+    try {
+      const response = await fetch(apiUrl, options)
+      if (!response.ok) throw new Error('Profile fetch failed')
+
+      const fetchedData = await response.json()
+      const {profile_details: profileDetailsData} = fetchedData
+
+      const updatedData = {
+        name: profileDetailsData.name,
+        profileImageUrl: profileDetailsData.profile_image_url,
+        shortBio: profileDetailsData.short_bio,
+      }
+
+      this.setState({profileDetails: updatedData, isProfileLoading: false})
+    } catch (error) {
+      this.setState({isProfileLoading: false, isProfileFailure: true})
+    }
+  }
+
+  getJobDetails = async () => {
+    this.setState({isJobsLoading: true, isFailure: false})
+
+    const {searchInput, activeEmploymentTypes, activeSalaryRangeId} = this.state // Use searchInput here
+    const employmentTypesQuery = activeEmploymentTypes.join(',')
+    const apiUrl = `https://apis.ccbp.in/jobs?employment_type=${employmentTypesQuery}&minimum_package=${activeSalaryRangeId}&search=${searchInput}`
+
+    const jwtToken = Cookies.get('jwt_token')
+    const options = {
+      headers: {Authorization: `Bearer ${jwtToken}`},
+      method: 'GET',
+    }
+
+    try {
+      const response = await fetch(apiUrl, options)
+      if (!response.ok) throw new Error('Jobs fetch failed')
+
+      const data = await response.json()
+      const updatedData = data.jobs.map(job => ({
+        id: job.id,
+        title: job.title,
+        companyLogoUrl: job.company_logo_url,
+        employmentType: job.employment_type,
+        location: job.location,
+        jobDescription: job.job_description,
+        packagePerAnnum: job.package_per_annum,
+        rating: job.rating,
+      }))
+
+      this.setState({jobDetails: updatedData, isJobsLoading: false})
+    } catch (error) {
+      this.setState({isJobsLoading: false, isFailure: true})
+    }
+  }
+
+  renderFailureView = () => (
+    <div className="failure-view-container">
+      <img
+        src="https://assets.ccbp.in/frontend/react-js/failure-img.png"
+        alt="failure view"
+        className="failure-image"
+      />
+      <h1 className="failure-heading">Oops! Something Went Wrong</h1>
+      <p className="failure-text">
+        We cannot seem to find the page you are looking for
+      </p>
+      <button
+        className="retry-button"
+        type="button"
+        onClick={this.getJobDetails}
+      >
+        Retry
+      </button>
+    </div>
+  )
+
+  render() {
+    const {
+      isJobsLoading,
+      isFailure,
+      jobDetails,
+      isProfileLoading,
+      profileDetails,
+      activeSalaryRangeId,
+      activeEmploymentTypes,
+      searchInput,
+      isProfileFailure,
+    } = this.state
+
+    let profileContent
+    let jobsContent
+
+    if (isProfileLoading) {
+      profileContent = (
+        <div className="loader-container" data-testid="loader">
+          <Loader type="ThreeDots" color="#ffffff" height={50} width={50} />
+        </div>
+      )
+    } else if (isProfileFailure) {
+      profileContent = this.renderFailureView()
+    } else {
+      profileContent = (
+        <Profile
+          profileDetails={profileDetails}
+          employmentTypesList={employmentTypesList}
+          salaryRangesList={salaryRangesList}
+          isActiveSalary={activeSalaryRangeId}
+          setActiveSalaryRange={this.setActiveSalaryRange}
+          setType={this.setType}
+          isActiveEmployment={activeEmploymentTypes}
+        />
+      )
+    }
+
+    if (isJobsLoading) {
+      jobsContent = (
+        <div className="loader-container" data-testid="jobs-loader">
+          <Loader type="ThreeDots" color="#ffffff" height={50} width={50} />
+        </div>
+      )
+    } else if (isFailure) {
+      jobsContent = this.renderFailureView()
+    } else if (jobDetails.length > 0) {
+      jobsContent = (
+        <ul className="jobs-list">
+          {jobDetails.map(eachJob => (
+            <JobsList key={eachJob.id} eachJob={eachJob} />
+          ))}
+        </ul>
+      )
+    } else {
+      jobsContent = <NoJobs getJobDetails={this.getJobDetails} />
+    }
+
+    return (
+      <div className="job-container">
+        <Header />
+        <div className="container">
+          {profileContent}
+
+          <div className="jobs-container">
+            <div className="search-container">
+              <input
+                type="search"
+                className="search-input"
+                placeholder="Search here"
+                onChange={this.onChangeSearchInput}
+                value={searchInput}
+              />
+              <button
+                onClick={this.onSearch}
+                className="search-button"
+                type="button"
+                data-testid="searchButton"
+              >
+                <BsSearch className="search-icon" />
+              </button>
+            </div>
+
+            {jobsContent}
+          </div>
+        </div>
+      </div>
+    )
+  }
+}
+
+export default Jobs

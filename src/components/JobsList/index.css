@@ -1,0 +1,64 @@
+hr {
+  border: none;
+  height: 2px;
+  background-color: #555;
+  box-shadow: 0 2px 5px rgba(255, 255, 255, 0.2);
+}
+.company-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 10px;
+}
+.job-card {
+  text-decoration: none;
+  color: #ffffff;
+}
+.bg-container {
+  background: #121212;
+  padding: 20px;
+  border-radius: 10px;
+  margin: 20px 20px 20px 10px;
+  width: 70vw;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.bg-container:hover {
+  background: #000000;
+  transform: scale(1.01);
+  box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.2); /* Shadow on all sides */
+}
+
+.first-container {
+  display: flex;
+  flex-direction: row;
+}
+.title-and-rating {
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+}
+.title {
+  margin: 6px;
+  font-size: 24px;
+}
+.rating {
+  margin: 6px;
+}
+.second-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.location-and-employment {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.location {
+  margin: 6px;
+}
+.employment {
+  margin: 6px;
+}
