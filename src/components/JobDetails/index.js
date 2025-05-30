@@ -2,6 +2,10 @@ import {Component} from 'react'
 import {withRouter} from 'react-router-dom'
 import Cookies from 'js-cookie'
 import Loader from 'react-loader-spinner'
+// You might need these icons for location/employment type if you haven't already
+import {MdLocationOn} from 'react-icons/md'
+import {BsFillBriefcaseFill} from 'react-icons/bs'
+import {RiShareBoxFill} from 'react-icons/ri' // For the "Visit" link icon
 import Header from '../Header'
 
 import './index.css'
@@ -21,6 +25,15 @@ class JobDetails extends Component {
     this.fetchJobDetails()
   }
 
+  // If the job ID changes (e.g., navigating from a similar job), refetch
+  componentDidUpdate(prevProps) {
+    const {match} = this.props
+    const {id} = match.params
+    if (prevProps.match.params.id !== id) {
+      this.fetchJobDetails()
+    }
+  }
+
   fetchJobDetails = async () => {
     this.setState({loading: true, error: false})
 
@@ -29,6 +42,7 @@ class JobDetails extends Component {
     const jwtToken = Cookies.get('jwt_token')
 
     if (!jwtToken) {
+      // You should typically redirect to login here, not just set error
       this.setState({loading: false, error: true})
       return
     }
@@ -44,14 +58,22 @@ class JobDetails extends Component {
 
       const jobDetails = {
         companyLogoUrl: data.job_details.company_logo_url,
+        companyWebsiteUrl: data.job_details.company_website_url, // ✅ Added this
         employmentType: data.job_details.employment_type,
         jobDescription: data.job_details.job_description,
         location: data.job_details.location,
         packagePerAnnum: data.job_details.package_per_annum,
         rating: data.job_details.rating,
         title: data.job_details.title,
-        skills: data.job_details.skills,
-        lifeAtCompany: data.job_details.life_at_company,
+        skills: data.job_details.skills.map(skill => ({
+          // Map skills for unique keys
+          name: skill.name,
+          imageUrl: skill.image_url,
+        })),
+        lifeAtCompany: {
+          description: data.job_details.life_at_company.description,
+          imageUrl: data.job_details.life_at_company.image_url,
+        },
       }
 
       const similarJobs = data.similar_jobs.map(job => ({
@@ -66,6 +88,7 @@ class JobDetails extends Component {
 
       this.setState({job: jobDetails, similarJobs, loading: false})
     } catch (err) {
+      console.error('Error fetching job details:', err) // Log error for debugging
       this.setState({loading: false, error: true})
     }
   }
@@ -96,17 +119,21 @@ class JobDetails extends Component {
 
     if (loading)
       return (
-        <div className="loader-container">
+        <div className="loader-container" data-testid="loader">
+          {' '}
+          {/* Correct data-testid here */}
           <Loader type="ThreeDots" color="#ffffff" height={50} width={50} />
         </div>
       )
 
-    if (error) return this.renderFailureView() // ✅ Show failure UI if API fails
+    if (error) return this.renderFailureView()
 
+    // It's good to add a check if job is null after loading, though error should cover API failure
     if (!job) return <p>No job details found.</p>
 
     const {
       companyLogoUrl,
+      companyWebsiteUrl, // ✅ Destructured the new property
       employmentType,
       jobDescription,
       location,
@@ -124,30 +151,51 @@ class JobDetails extends Component {
           <div className="first-container">
             <img
               src={companyLogoUrl}
-              alt="company logo"
+              alt="job details company logo" // ✅ Corrected alt text
               className="company-img"
             />
             <div className="title-and-rating">
-              <h3 className="title">{title}</h3>
+              <div className="title-and-visit">
+                <h3 className="title">{title}</h3>
+                <a
+                  href={companyWebsiteUrl} // ✅ Correct href
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="visit-link" // Add a class for styling if needed
+                >
+                  Visit <RiShareBoxFill className="visit-icon" />{' '}
+                  {/* Added icon for better UX */}
+                </a>
+              </div>
               <p className="rating">⭐ {rating}</p>
             </div>
           </div>
           <div className="second-container">
             <div className="location-and-employment">
-              <p className="location">📍 {location}</p>
-              <p className="employment">🛠 {employmentType}</p>
+              <p className="location">
+                <MdLocationOn className="icon" /> {location}
+              </p>
+              <p className="employment">
+                <BsFillBriefcaseFill className="icon" /> {employmentType}
+              </p>
             </div>
             <p className="package">💰 {packagePerAnnum}</p>
           </div>
           <hr />
-          <h1 className="description-title">Description</h1>
-          <p className="job-description">{jobDescription}</p>
+          <div className="description-section">
+            {' '}
+            {/* Added a div for description grouping */}
+            <h1 className="description-title">Description</h1>
+            <p className="job-description">{jobDescription}</p>
+          </div>
           <hr />
           <h1>Skills</h1>
           <ul className="skills-list">
             {skills.map(skill => (
               <li key={skill.name} className="skill-item">
-                <img src={skill.image_url} alt={skill.name} width="60" />
+                {' '}
+                {/* Using skill.name as key; ensure it's unique */}
+                <img src={skill.imageUrl} alt={skill.name} width="60" />
                 <span>{skill.name}</span>
               </li>
             ))}
@@ -159,7 +207,7 @@ class JobDetails extends Component {
               <p>{lifeAtCompany.description}</p>
             </div>
             <img
-              src={lifeAtCompany.image_url}
+              src={lifeAtCompany.imageUrl} // Use imageUrl from mapped object
               className="life-at-company-img"
               alt="Life at company"
               width="200"
@@ -171,6 +219,8 @@ class JobDetails extends Component {
           <ul className="similar-jobs-container">
             {similarJobs.map(eachjob => (
               <li className="list-item" key={eachjob.id}>
+                {' '}
+                {/* Correct key prop */}
                 <div className="first-container">
                   <img
                     src={eachjob.companyLogoUrl}
@@ -189,8 +239,13 @@ class JobDetails extends Component {
                 </div>
                 <div className="second-container">
                   <div className="location-and-employment">
-                    <p className="location">📍 {eachjob.location}</p>
-                    <p className="employment">🛠 {eachjob.employmentType}</p>
+                    <p className="location">
+                      <MdLocationOn className="icon" /> {eachjob.location}
+                    </p>
+                    <p className="employment">
+                      <BsFillBriefcaseFill className="icon" />{' '}
+                      {eachjob.employmentType}
+                    </p>
                   </div>
                 </div>
               </li>

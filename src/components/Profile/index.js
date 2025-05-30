@@ -7,8 +7,13 @@ const Profile = props => {
     salaryRangesList,
     setType,
     setActiveSalaryRange,
+    activeLocationIds, // Received from Jobs component
+    setLocationType,
+    locationList,
   } = props
+
   const {name, profileImageUrl, shortBio} = profileDetails
+
   return (
     <div className="prfl-container">
       <div className="prfl-card">
@@ -27,6 +32,8 @@ const Profile = props => {
                 type="checkbox"
                 id={empType.employmentTypeId}
                 onChange={() => setType(empType.employmentTypeId)}
+                // Add checked prop if you want them to be controlled by state
+                // checked={isActiveEmployment.includes(empType.employmentTypeId)}
               />
               <label htmlFor={empType.employmentTypeId}>
                 {empType.employeeLabel}
@@ -41,14 +48,36 @@ const Profile = props => {
         <h1 className="type-of-employment-text">Salary Range</h1>
         <ul className="type-of-employment">
           {salaryRangesList.map(salary => (
-            <li key={salary.label}>
+            <li key={salary.salaryRangeId}>
               <input
                 type="radio"
-                onClick={() => setActiveSalaryRange(salary.salaryRangeId)}
                 id={salary.salaryRangeId}
                 name="salary"
+                onChange={() => setActiveSalaryRange(salary.salaryRangeId)}
+                // Add checked prop if you want them to be controlled by state
+                // checked={isActiveSalary === salary.salaryRangeId}
               />
               <label htmlFor={salary.salaryRangeId}>{salary.label}</label>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <hr />
+
+      <div>
+        <h1 className="type-of-employment-text">Location</h1>
+        <ul className="type-of-employment">
+          {locationList.map(location => (
+            <li key={location.locationId}>
+              <input
+                type="checkbox"
+                id={location.locationId}
+                onChange={() => setLocationType(location.locationId)}
+                checked={activeLocationIds.includes(location.locationId)} // ✅ This is the key
+              />
+              <label htmlFor={location.locationId}>
+                {location.label} {/* This will be "Hyderabad", "Delhi", etc. */}
+              </label>
             </li>
           ))}
         </ul>

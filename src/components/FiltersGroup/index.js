@@ -29,6 +29,7 @@ const FiltersGroup = props => {
   const renderExperienceFilters = () => (
     <div>
       <h1 className="filter-heading">Experience Level</h1>
+      <h1>haha</h1>
       <ul className="filter-list">{renderExperienceFiltersList()}</ul>
     </div>
   )

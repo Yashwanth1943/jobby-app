@@ -1,7 +1,7 @@
 import './index.css'
 import {Component} from 'react'
 import Cookies from 'js-cookie'
-import {BsSearch} from 'react-icons/bs' // Import BsSearch
+import {BsSearch} from 'react-icons/bs'
 import Loader from 'react-loader-spinner'
 import Profile from '../Profile'
 import JobsList from '../JobsList'
@@ -46,6 +46,29 @@ const salaryRangesList = [
   },
 ]
 
+const locationList = [
+  {
+    locationId: 'HYDERABAD',
+    label: 'Hyderabad',
+  },
+  {
+    locationId: 'BANGALORE',
+    label: 'Bangalore',
+  },
+  {
+    locationId: 'CHENNAI',
+    label: 'Chennai',
+  },
+  {
+    locationId: 'DELHI',
+    label: 'Delhi',
+  },
+  {
+    locationId: 'MUMBAI',
+    label: 'Mumbai',
+  },
+]
+
 class Jobs extends Component {
   state = {
     isProfileLoading: true,
@@ -54,9 +77,10 @@ class Jobs extends Component {
     isProfileFailure: false,
     profileDetails: {},
     jobDetails: [],
-    searchInput: '', // Initialize searchInput state
+    searchInput: '',
     activeSalaryRangeId: '',
     activeEmploymentTypes: [],
+    activeLocationIds: [], // State to store selected location IDs
   }
 
   componentDidMount() {
@@ -68,6 +92,20 @@ class Jobs extends Component {
     this.setState({activeSalaryRangeId: salaryRangeId}, this.getJobDetails)
   }
 
+  // Toggles the selection of a location checkbox
+  setLocationType = locationId => {
+    this.setState(
+      prevState => {
+        const {activeLocationIds} = prevState
+        const updatedLocationIds = activeLocationIds.includes(locationId)
+          ? activeLocationIds.filter(id => id !== locationId) // Deselect
+          : [...activeLocationIds, locationId] // Select
+        return {activeLocationIds: updatedLocationIds}
+      },
+      this.getJobDetails, // Call getJobDetails after state update
+    )
+  }
+
   setType = employmentTypeId => {
     this.setState(prevState => {
       const {activeEmploymentTypes} = prevState
@@ -76,7 +114,6 @@ class Jobs extends Component {
       )
         ? activeEmploymentTypes.filter(type => type !== employmentTypeId)
         : [...activeEmploymentTypes, employmentTypeId]
-
       return {activeEmploymentTypes: updatedEmploymentTypes}
     }, this.getJobDetails)
   }
@@ -91,7 +128,6 @@ class Jobs extends Component {
 
   getProfileDetails = async () => {
     this.setState({isProfileLoading: true, isProfileFailure: false})
-
     const apiUrl = `https://apis.ccbp.in/profile`
     const jwtToken = Cookies.get('jwt_token')
     const options = {
@@ -121,8 +157,17 @@ class Jobs extends Component {
   getJobDetails = async () => {
     this.setState({isJobsLoading: true, isFailure: false})
 
-    const {searchInput, activeEmploymentTypes, activeSalaryRangeId} = this.state // Use searchInput here
+    const {
+      searchInput,
+      activeEmploymentTypes,
+      activeSalaryRangeId,
+      activeLocationIds, // Get the selected location IDs from state
+    } = this.state
+
     const employmentTypesQuery = activeEmploymentTypes.join(',')
+
+    // The API URL typically doesn't include location filters.
+    // We will filter locally after fetching all jobs.
     const apiUrl = `https://apis.ccbp.in/jobs?employment_type=${employmentTypesQuery}&minimum_package=${activeSalaryRangeId}&search=${searchInput}`
 
     const jwtToken = Cookies.get('jwt_token')
@@ -131,21 +176,33 @@ class Jobs extends Component {
       method: 'GET',
     }
 
+    // ... inside getJobDetails ...
     try {
       const response = await fetch(apiUrl, options)
       if (!response.ok) throw new Error('Jobs fetch failed')
 
       const data = await response.json()
-      const updatedData = data.jobs.map(job => ({
+      let updatedData = data.jobs.map(job => ({
         id: job.id,
         title: job.title,
         companyLogoUrl: job.company_logo_url,
         employmentType: job.employment_type,
-        location: job.location,
+        location: job.location, // Keep original casing from API
         jobDescription: job.job_description,
         packagePerAnnum: job.package_per_annum,
         rating: job.rating,
       }))
+
+      // --- LOCAL FILTERING FOR LOCATION ---
+      if (activeLocationIds.length > 0) {
+        updatedData = updatedData.filter(job =>
+          activeLocationIds.some(
+            selectedLocationId =>
+              selectedLocationId.toUpperCase() === job.location.toUpperCase(),
+          ),
+        )
+      }
+      // --- END LOCAL FILTERING ---
 
       this.setState({jobDetails: updatedData, isJobsLoading: false})
     } catch (error) {
@@ -185,6 +242,7 @@ class Jobs extends Component {
       activeEmploymentTypes,
       searchInput,
       isProfileFailure,
+      activeLocationIds, // Pass to Profile component
     } = this.state
 
     let profileContent
@@ -197,17 +255,21 @@ class Jobs extends Component {
         </div>
       )
     } else if (isProfileFailure) {
-      profileContent = this.renderFailureView()
+      profileContent = this.renderFailureView() // You might want a specific profile failure view
     } else {
       profileContent = (
         <Profile
           profileDetails={profileDetails}
           employmentTypesList={employmentTypesList}
           salaryRangesList={salaryRangesList}
-          isActiveSalary={activeSalaryRangeId}
+          // isActiveSalary is not used in Profile, but setActiveSalaryRange is correct
           setActiveSalaryRange={this.setActiveSalaryRange}
+          locationList={locationList}
+          // setActiveLocation is not needed, setLocationType handles it
           setType={this.setType}
+          setLocationType={this.setLocationType}
           isActiveEmployment={activeEmploymentTypes}
+          activeLocationIds={activeLocationIds} // Pass activeLocationIds to Profile
         />
       )
     }
@@ -237,7 +299,6 @@ class Jobs extends Component {
         <Header />
         <div className="container">
           {profileContent}
-
           <div className="jobs-container">
             <div className="search-container">
               <input
@@ -256,7 +317,6 @@ class Jobs extends Component {
                 <BsSearch className="search-icon" />
               </button>
             </div>
-
             {jobsContent}
           </div>
         </div>

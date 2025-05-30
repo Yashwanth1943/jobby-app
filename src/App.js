@@ -15,7 +15,7 @@ const App = () => (
       <ProtectedRoute exact path="/" component={Home} />
       <ProtectedRoute exact path="/jobs" component={Jobs} />
       <ProtectedRoute exact path="/jobs/:id" component={JobDetails} />
-      <Route to="/not-found" component={NotFound} />
+      {/* This catch-all Route must be the last one in the Switch */}
       <Route component={NotFound} />
     </Switch>
   </BrowserRouter>
