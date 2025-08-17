@@ -148,7 +148,10 @@
   border-radius: 50%;
   transform: translate(-50%, -50%);
   opacity: 0;
-  transition: width 0.3s ease-out, height 0.3s ease-out, opacity 0.3s ease-out; /* Faster ripple */
+  transition:
+    width 0.3s ease-out,
+    height 0.3s ease-out,
+    opacity 0.3s ease-out; /* Faster ripple */
 }
 
 .login-button:active::before {
