@@ -87,7 +87,7 @@ class LoginPage extends Component {
           value={username}
           onChange={this.onChangeUsername}
         />
-        <p>User:rahul</p>
+        <p>Username: rahul</p>
       </>
     )
   }
